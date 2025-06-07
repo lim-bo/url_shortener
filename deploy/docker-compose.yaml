@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:17.5-alpine3.22
+    hostname: postgres
+    container_name: urlshort_postgres_container
+    ports:
+      - 5435:5432
+    volumes:
+      - urlshort_pgdata:/var/lib/postgresql/data/pgdata
+      - ../migrations/psql:/docker-entrypoint-initdb.d
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASS}
+      POSTGRES_DB: ${POSTGRES_DBNAME}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    restart: unless-stopped
+    networks:
+      - urlshort_net
+      
+volumes:
+  urlshort_pgdata:
+
+networks:
+  urlshort_net:
