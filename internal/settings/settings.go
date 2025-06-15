@@ -14,6 +14,10 @@ func (c *Config) GetString(key string) string {
 	return viper.GetString(key)
 }
 
+func (c *Config) GetInt(key string) int {
+	return viper.GetInt(key)
+}
+
 var (
 	instance *Config
 	once     sync.Once
