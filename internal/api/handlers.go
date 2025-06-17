@@ -49,7 +49,20 @@ func (s *Server) shorten(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) redirect(w http.ResponseWriter, r *http.Request) {
-
+	code := r.PathValue("short_code")
+	if code == "" {
+		slog.Error("redirect request with invalid short code")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	originalLink, err := s.lm.GetLinkByCode(code)
+	if err != nil {
+		slog.Error("getting original link error", slog.String("error", err.Error()))
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	http.Redirect(w, r, originalLink, http.StatusPermanentRedirect)
+	slog.Info("successfull redirect")
 }
 
 func (s *Server) clickStats(w http.ResponseWriter, r *http.Request) {
