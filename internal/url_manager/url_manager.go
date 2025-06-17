@@ -36,6 +36,7 @@ type DBCfg struct {
 	Options  map[string]string
 }
 
+// Returns new DB client with provided short code generator
 func New(cfg DBCfg, gen Generator) *Client {
 	optsStr := ""
 	if len(cfg.Options) != 0 {
@@ -47,6 +48,10 @@ func New(cfg DBCfg, gen Generator) *Client {
 	p, err := pgxpool.New(context.Background(), "postgresql://"+cfg.User+":"+cfg.Password+"@"+cfg.Address+"/"+cfg.DBName+optsStr)
 	if err != nil {
 		log.Fatal(err)
+	}
+	err = p.Ping(context.Background())
+	if err != nil {
+		log.Fatal("ping error: " + err.Error())
 	}
 	return &Client{
 		pool:          p,
@@ -67,7 +72,7 @@ func (c *Client) SaveURL(link string) (string, error) {
 	shortCode := c.codeGenerator.Gen()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
-	_, err := c.pool.Exec(ctx, `INSERT INTO redirects VALUES ($1, $2);`, link, shortCode)
+	_, err := c.pool.Exec(ctx, `INSERT INTO redirects (link, short_code) VALUES ($1, $2);`, link, shortCode)
 	if err != nil {
 		if isDuplicateFieldError(err) {
 			return "", errors.New("duplicating short code")

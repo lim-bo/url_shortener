@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/bytedance/sonic"
+	"github.com/limbo/url_shortener/internal/settings"
 )
 
 func (s *Server) CORSMiddleware(next http.Handler) http.Handler {
@@ -38,7 +39,7 @@ func (s *Server) shorten(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = sonic.ConfigFastest.NewEncoder(w).Encode(map[string]string{"link": shortLink})
+	err = sonic.ConfigFastest.NewEncoder(w).Encode(map[string]string{"link": settings.GetConfig().GetString("api_address") + "/" + shortLink})
 	if err != nil {
 		slog.Error("error while marshalling results", slog.String("error", err.Error()), slog.String("endpoint", "/shorten"))
 		w.WriteHeader(http.StatusInternalServerError)

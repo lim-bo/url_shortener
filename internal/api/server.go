@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -40,5 +41,6 @@ func (s *Server) Run() error {
 	s.moundEndpoints()
 	cfg := settings.GetConfig()
 	address := cfg.GetString("api_address")
+	slog.Info("server running on " + address)
 	return http.ListenAndServe(address, s.mx)
 }
