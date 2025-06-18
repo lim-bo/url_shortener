@@ -20,9 +20,21 @@ services:
     restart: unless-stopped
     networks:
       - urlshort_net
-      
+  redis:
+    image: redis:latest
+    container_name: urlshort_redis_container
+    hostname: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - urlshort_redis_data:/data
+    env_file:
+      - .env
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASS}
+
 volumes:
   urlshort_pgdata:
+  urlshort_redis_data:
 
 networks:
   urlshort_net:
