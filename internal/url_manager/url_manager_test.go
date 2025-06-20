@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	urlmanager "github.com/limbo/url_shortener/internal/url_manager"
 	"github.com/pashagolub/pgxmock/v2"
@@ -84,12 +85,30 @@ func TestSaveURL(t *testing.T) {
 	defer mockPool.Close()
 
 	cli := urlmanager.NewWithPool(mockPool, &CodeGenMock{})
-	t.Run("successful saving", func(t *testing.T) {
-		mockPool.ExpectExec(`INSERT INTO`).WithArgs(testUrl, testCode).WillReturnResult(pgxmock.NewResult("INSERT", 1))
+	t.Run("code with no inserting", func(t *testing.T) {
+		mockPool.ExpectBegin()
+
+		mockPool.ExpectQuery(`SELECT short_code`).WithArgs(testUrl).WillReturnRows(pgxmock.NewRows([]string{"short_code"}).AddRow(testCode))
+
+		mockPool.ExpectCommit()
+
 		shortCode, err := cli.SaveURL(testUrl)
 		if err != nil {
 			t.Error(err)
 		}
+		assert.NoError(t, mockPool.ExpectationsWereMet())
+		assert.Equal(t, shortCode, testCode)
+	})
+	t.Run("code with inserting", func(t *testing.T) {
+		mockPool.ExpectBegin()
+		mockPool.ExpectQuery(`SELECT short_code`).WithArgs(testUrl).WillReturnError(pgx.ErrNoRows)
+		mockPool.ExpectExec(`INSERT INTO`).WithArgs(testUrl, testCode).WillReturnResult(pgxmock.NewResult("INSERT", 1))
+		mockPool.ExpectCommit()
+		shortCode, err := cli.SaveURL(testUrl)
+		if err != nil {
+			t.Error(err)
+		}
+		assert.NoError(t, mockPool.ExpectationsWereMet())
 		assert.Equal(t, shortCode, testCode)
 	})
 	t.Run("mock error", func(t *testing.T) {
