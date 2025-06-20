@@ -34,7 +34,7 @@ func New(lm LinksManager, cm CacheManager) *Server {
 
 func (s *Server) moundEndpoints() {
 	cfg := settings.GetConfig()
-	s.mx.Use(s.CORSMiddleware)
+	s.mx.Use(s.CORSMiddleware, s.RequestIDMiddleware)
 	s.mx.Route("/api/v"+cfg.GetString("api_version"), func(r chi.Router) {
 		r.Post("/shorten", s.shorten)
 		r.Route("/stats", func(r chi.Router) {

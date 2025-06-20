@@ -1,10 +1,12 @@
 package api
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 
 	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 	"github.com/limbo/url_shortener/internal/settings"
 )
 
@@ -12,6 +14,16 @@ func (s *Server) CORSMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *Server) RequestIDMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestID := uuid.New()
+		ctx := context.WithValue(r.Context(), "requestID", requestID.String())
+		r = r.WithContext(ctx)
+		w.Header().Set("X-Request-ID", requestID.String())
 		next.ServeHTTP(w, r)
 	})
 }
