@@ -29,11 +29,12 @@ func (s *Server) RequestIDMiddleware(next http.Handler) http.Handler {
 }
 
 func (s *Server) shorten(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var originalLink string
 	request := make(map[string]interface{}, 0)
 	err := sonic.ConfigFastest.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		slog.Error("error unmarshalling request body", slog.String("error", err.Error()), slog.String("endpoint", "/shorten"))
+		slog.ErrorContext(ctx, "error unmarshalling request body", slog.String("error", err.Error()), slog.String("endpoint", "/shorten"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -41,55 +42,56 @@ func (s *Server) shorten(w http.ResponseWriter, r *http.Request) {
 
 	originalLink, ok := request["link"].(string)
 	if !ok {
-		slog.Error("shorten request with invalid link", slog.String("endpoint", "/shorten"))
+		slog.ErrorContext(ctx, "shorten request with invalid link", slog.String("endpoint", "/shorten"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	shortCode, err := s.links.SaveURL(originalLink)
 	if err != nil {
-		slog.Error("error while saving link", slog.String("error", err.Error()), slog.String("endpoint", "/shorten"))
+		slog.ErrorContext(ctx, "error while saving link", slog.String("error", err.Error()), slog.String("endpoint", "/shorten"))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	go func() {
 		err := s.cache.CacheLink(shortCode, originalLink)
 		if err != nil {
-			slog.Error("error caching link", slog.String("error", err.Error()))
+			slog.ErrorContext(ctx, "error caching link", slog.String("error", err.Error()))
 		} else {
-			slog.Info("link cached")
+			slog.InfoContext(ctx, "link cached")
 		}
 	}()
 	err = sonic.ConfigFastest.NewEncoder(w).Encode(map[string]string{"link": settings.GetConfig().GetString("api_address") + "/" + shortCode})
 	if err != nil {
-		slog.Error("error while marshalling results", slog.String("error", err.Error()), slog.String("endpoint", "/shorten"))
+		slog.ErrorContext(ctx, "error while marshalling results", slog.String("error", err.Error()), slog.String("endpoint", "/shorten"))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	slog.Info("successfully provided short link", slog.String("endpoint", "/shorten"))
+	slog.InfoContext(ctx, "successfully provided short link", slog.String("endpoint", "/shorten"))
 }
 
 func (s *Server) redirect(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	code := r.PathValue("short_code")
 	if code == "" {
-		slog.Error("redirect request with invalid short code")
+		slog.ErrorContext(ctx, "redirect request with invalid short code")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	originalLink, err := s.cache.GetLink(code)
 	if err != nil && err != ErrNoKey {
-		slog.Error("error getting link cache", slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "error getting link cache", slog.String("error", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	} else if err == ErrNoKey {
 		originalLink, err = s.links.GetLinkByCode(code)
 		if err != nil {
-			slog.Error("getting original link error", slog.String("error", err.Error()))
+			slog.ErrorContext(ctx, "getting original link error", slog.String("error", err.Error()))
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 	}
 	http.Redirect(w, r, originalLink, http.StatusPermanentRedirect)
-	slog.Info("successfull redirect")
+	slog.InfoContext(ctx, "successfull redirect")
 }
 
 func (s *Server) clickStats(w http.ResponseWriter, r *http.Request) {

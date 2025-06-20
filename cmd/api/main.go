@@ -2,8 +2,11 @@ package main
 
 import (
 	"log"
+	"log/slog"
+	"os"
 
 	"github.com/limbo/url_shortener/internal/api"
+	"github.com/limbo/url_shortener/internal/logger"
 	"github.com/limbo/url_shortener/internal/settings"
 	cache "github.com/limbo/url_shortener/internal/url_cache_manager"
 	urlmanager "github.com/limbo/url_shortener/internal/url_manager"
@@ -23,6 +26,11 @@ func main() {
 		Address:  cfg.GetString("redis_address"),
 		Password: cfg.GetString("redis_pass"),
 	})
+
+	lgger := slog.New(
+		logger.NewContextHandler(slog.NewTextHandler(os.Stdout, nil)),
+	)
+	slog.SetDefault(lgger)
 
 	serv := api.New(lm, cm)
 	log.Fatal(serv.Run())
