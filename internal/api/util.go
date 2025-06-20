@@ -1,6 +1,8 @@
 package api
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	ErrNoKey = errors.New("no such key in cache")

@@ -13,15 +13,22 @@ type LinksManager interface {
 	GetLinkByCode(code string) (string, error)
 }
 
-type Server struct {
-	mx *chi.Mux
-	lm LinksManager
+type CacheManager interface {
+	CacheLink(shortCode string, link string) error
+	GetLink(shortCode string) (string, error)
 }
 
-func New(lm LinksManager) *Server {
+type Server struct {
+	mx    *chi.Mux
+	links LinksManager
+	cache CacheManager
+}
+
+func New(lm LinksManager, cm CacheManager) *Server {
 	return &Server{
-		mx: chi.NewMux(),
-		lm: lm,
+		mx:    chi.NewMux(),
+		links: lm,
+		cache: cm,
 	}
 }
 

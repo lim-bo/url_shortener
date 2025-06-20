@@ -33,13 +33,21 @@ func (s *Server) shorten(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	shortLink, err := s.lm.SaveURL(originalLink)
+	shortCode, err := s.links.SaveURL(originalLink)
 	if err != nil {
 		slog.Error("error while saving link", slog.String("error", err.Error()), slog.String("endpoint", "/shorten"))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = sonic.ConfigFastest.NewEncoder(w).Encode(map[string]string{"link": settings.GetConfig().GetString("api_address") + "/" + shortLink})
+	go func() {
+		err := s.cache.CacheLink(shortCode, originalLink)
+		if err != nil {
+			slog.Error("error caching link", slog.String("error", err.Error()))
+		} else {
+			slog.Info("link cached")
+		}
+	}()
+	err = sonic.ConfigFastest.NewEncoder(w).Encode(map[string]string{"link": settings.GetConfig().GetString("api_address") + "/" + shortCode})
 	if err != nil {
 		slog.Error("error while marshalling results", slog.String("error", err.Error()), slog.String("endpoint", "/shorten"))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -55,11 +63,18 @@ func (s *Server) redirect(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	originalLink, err := s.lm.GetLinkByCode(code)
-	if err != nil {
-		slog.Error("getting original link error", slog.String("error", err.Error()))
-		w.WriteHeader(http.StatusNotFound)
+	originalLink, err := s.cache.GetLink(code)
+	if err != nil && err != ErrNoKey {
+		slog.Error("error getting link cache", slog.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
 		return
+	} else if err == ErrNoKey {
+		originalLink, err = s.links.GetLinkByCode(code)
+		if err != nil {
+			slog.Error("getting original link error", slog.String("error", err.Error()))
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 	}
 	http.Redirect(w, r, originalLink, http.StatusPermanentRedirect)
 	slog.Info("successfull redirect")

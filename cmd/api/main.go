@@ -5,6 +5,7 @@ import (
 
 	"github.com/limbo/url_shortener/internal/api"
 	"github.com/limbo/url_shortener/internal/settings"
+	cache "github.com/limbo/url_shortener/internal/url_cache_manager"
 	urlmanager "github.com/limbo/url_shortener/internal/url_manager"
 )
 
@@ -18,6 +19,11 @@ func main() {
 		DBName:   cfg.GetString("links_db_name"),
 	}, &urlmanager.CodeGenerator{})
 
-	serv := api.New(lm)
+	cm := cache.New(cache.RedisConfig{
+		Address:  cfg.GetString("redis_address"),
+		Password: cfg.GetString("redis_pass"),
+	})
+
+	serv := api.New(lm, cm)
 	log.Fatal(serv.Run())
 }
