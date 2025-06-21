@@ -1,0 +1,64 @@
+basePath: /
+definitions:
+  api.ShortenRequest:
+    properties:
+      link:
+        type: string
+    type: object
+  api.ShortenResponse:
+    properties:
+      link:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API for url-shortener app
+  title: URL-shortener API
+paths:
+  /{short_code}:
+    get:
+      description: |-
+        Takes shortcode in path value, searchs original url
+        linked with it and then redirects with 308 code.
+      parameters:
+      - description: short code of original link
+        example: '"12345678"'
+        in: path
+        name: short_code
+        required: true
+        type: string
+      responses:
+        "308":
+          description: Redirected
+        "404":
+          description: Invalid code or internal error
+      summary: Redirects to original link with provided short code
+  /shorten:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Recieves request with json data {"link": ...}, if there such link was already saved
+        provides its short version, otherwise generates new one and saves data to db.
+      parameters:
+      - description: Link to be shorted
+        in: body
+        name: link
+        required: true
+        schema:
+          $ref: '#/definitions/api.ShortenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Link saved and short version returned" example({"link": "host/12345678"})'
+          schema:
+            $ref: '#/definitions/api.ShortenResponse'
+        "400":
+          description: Invalid request body
+        "500":
+          description: Error while fetching databases
+      summary: Recieves link to be shorted and provides short one
+schemes:
+- http
+swagger: "2.0"

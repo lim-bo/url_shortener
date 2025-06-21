@@ -1,0 +1,93 @@
+{
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "API for url-shortener app",
+        "title": "URL-shortener API",
+        "contact": {}
+    },
+    "basePath": "/",
+    "paths": {
+        "/shorten": {
+            "post": {
+                "description": "Recieves request with json data {\"link\": ...}, if there such link was already saved\nprovides its short version, otherwise generates new one and saves data to db.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Recieves link to be shorted and provides short one",
+                "parameters": [
+                    {
+                        "description": "Link to be shorted",
+                        "name": "link",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.ShortenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Link saved and short version returned\" example({\"link\": \"host/12345678\"})",
+                        "schema": {
+                            "$ref": "#/definitions/api.ShortenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body"
+                    },
+                    "500": {
+                        "description": "Error while fetching databases"
+                    }
+                }
+            }
+        },
+        "/{short_code}": {
+            "get": {
+                "description": "Takes shortcode in path value, searchs original url\nlinked with it and then redirects with 308 code.",
+                "summary": "Redirects to original link with provided short code",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"12345678\"",
+                        "description": "short code of original link",
+                        "name": "short_code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "308": {
+                        "description": "Redirected"
+                    },
+                    "404": {
+                        "description": "Invalid code or internal error"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.ShortenRequest": {
+            "type": "object",
+            "properties": {
+                "link": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.ShortenResponse": {
+            "type": "object",
+            "properties": {
+                "link": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
