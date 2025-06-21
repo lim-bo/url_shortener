@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/limbo/url_shortener/internal/settings"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type LinksManager interface {
@@ -42,6 +43,10 @@ func (s *Server) moundEndpoints() {
 		})
 	})
 	s.mx.Get("/{short_code}", s.redirect)
+
+	s.mx.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 }
 
 func (s *Server) Run() error {

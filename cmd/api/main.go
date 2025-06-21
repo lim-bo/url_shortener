@@ -1,3 +1,7 @@
+// @title URL-shortener API
+// @description API for url-shortener app
+// @BasePath /
+// @schemes http
 package main
 
 import (
@@ -5,6 +9,7 @@ import (
 	"log/slog"
 	"os"
 
+	_ "github.com/limbo/url_shortener/docs"
 	"github.com/limbo/url_shortener/internal/api"
 	"github.com/limbo/url_shortener/internal/logger"
 	"github.com/limbo/url_shortener/internal/settings"

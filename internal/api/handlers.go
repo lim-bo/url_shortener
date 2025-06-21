@@ -28,10 +28,28 @@ func (s *Server) RequestIDMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+type ShortenRequest struct {
+	Link string `json:"link"`
+}
+
+type ShortenResponse struct {
+	Link string `json:"link"`
+}
+
+// @Router /shorten [post]
+// @Summary Recieves link to be shorted and provides short one
+// @Description Recieves request with json data {"link": ...}, if there such link was already saved
+// @Description provides its short version, otherwise generates new one and saves data to db.
+// @Param link body ShortenRequest true "Link to be shorted" example({"link": "google.com"})
+// @Success 200 {object} ShortenResponse "Link saved and short version returned" example({"link": "host/12345678"})
+// @Failure 400 "Invalid request body"
+// @Failure 500 "Error while fetching databases"
+// @Accept json
+// @Produce json
 func (s *Server) shorten(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var originalLink string
-	request := make(map[string]interface{}, 0)
+	var request ShortenRequest
 	err := sonic.ConfigFastest.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		slog.ErrorContext(ctx, "error unmarshalling request body", slog.String("error", err.Error()), slog.String("endpoint", "/shorten"))
@@ -40,12 +58,7 @@ func (s *Server) shorten(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	originalLink, ok := request["link"].(string)
-	if !ok {
-		slog.ErrorContext(ctx, "shorten request with invalid link", slog.String("endpoint", "/shorten"))
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	originalLink = request.Link
 	shortCode, err := s.links.SaveURL(originalLink)
 	if err != nil {
 		slog.ErrorContext(ctx, "error while saving link", slog.String("error", err.Error()), slog.String("endpoint", "/shorten"))
@@ -60,7 +73,7 @@ func (s *Server) shorten(w http.ResponseWriter, r *http.Request) {
 			slog.InfoContext(ctx, "link cached")
 		}
 	}()
-	err = sonic.ConfigFastest.NewEncoder(w).Encode(map[string]string{"link": settings.GetConfig().GetString("api_address") + "/" + shortCode})
+	err = sonic.ConfigFastest.NewEncoder(w).Encode(ShortenResponse{Link: settings.GetConfig().GetString("api_address") + "/" + shortCode})
 	if err != nil {
 		slog.ErrorContext(ctx, "error while marshalling results", slog.String("error", err.Error()), slog.String("endpoint", "/shorten"))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -69,6 +82,13 @@ func (s *Server) shorten(w http.ResponseWriter, r *http.Request) {
 	slog.InfoContext(ctx, "successfully provided short link", slog.String("endpoint", "/shorten"))
 }
 
+// @Router /{short_code} [get]
+// @Summary Redirects to original link with provided short code
+// @Description Takes shortcode in path value, searchs original url
+// @Description linked with it and then redirects with 308 code.
+// @Param short_code path string true "short code of original link" example("12345678")
+// @Success 308 "Redirected"
+// @Failure 404 "Invalid code or internal error"
 func (s *Server) redirect(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	code := r.PathValue("short_code")
@@ -80,7 +100,7 @@ func (s *Server) redirect(w http.ResponseWriter, r *http.Request) {
 	originalLink, err := s.cache.GetLink(code)
 	if err != nil && err != ErrNoKey {
 		slog.ErrorContext(ctx, "error getting link cache", slog.String("error", err.Error()))
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusNotFound)
 		return
 	} else if err == ErrNoKey {
 		originalLink, err = s.links.GetLinkByCode(code)
