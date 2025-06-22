@@ -50,11 +50,41 @@ services:
     restart: always
     networks:
       - urlshort_net
+      - urlshort_metrics
     
-
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ../config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - urlshort_metrics
+  
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - urlshort_grafana_storage:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASS}
+      GF_USERS_ALLOW_SIGN_UP: false
+    depends_on:
+      - prometheus
+    networks:
+      - urlshort_metrics
 volumes:
   urlshort_pgdata:
   urlshort_redis_data:
+  urlshort_grafana_storage:
 
 networks:
   urlshort_net:
+  urlshort_metrics:
