@@ -47,6 +47,7 @@ services:
       - redis
     ports:
       - 8091:8080
+      - 2112:2112
     restart: always
     networks:
       - urlshort_net
