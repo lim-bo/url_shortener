@@ -31,6 +31,26 @@ services:
     env_file:
       - .env
     command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASS}
+    networks:
+      - urlshort_net
+    restart: unless-stopped
+  api:
+    image: urlshort/api
+    build:
+      context: ../
+      dockerfile: deploy/api/DockerFile
+    container_name: urlshort_api_container
+    environment:
+      WAIT_HOSTS: postgres:5432
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - 8091:8080
+    restart: always
+    networks:
+      - urlshort_net
+    
 
 volumes:
   urlshort_pgdata:

@@ -73,7 +73,7 @@ func (s *Server) shorten(w http.ResponseWriter, r *http.Request) {
 			slog.InfoContext(ctx, "link cached")
 		}
 	}()
-	err = sonic.ConfigFastest.NewEncoder(w).Encode(ShortenResponse{Link: settings.GetConfig().GetString("api_address") + "/" + shortCode})
+	err = sonic.ConfigFastest.NewEncoder(w).Encode(ShortenResponse{Link: settings.GetConfig().GetString("domain_name") + "/" + shortCode})
 	if err != nil {
 		slog.ErrorContext(ctx, "error while marshalling results", slog.String("error", err.Error()), slog.String("endpoint", "/shorten"))
 		w.WriteHeader(http.StatusInternalServerError)
