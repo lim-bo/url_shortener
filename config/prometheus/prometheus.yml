@@ -1,6 +1,6 @@
 global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+  scrape_interval: 10s
+  evaluation_interval: 10s
 
 scrape_configs:
   - job_name: 'go-api'
@@ -8,6 +8,4 @@ scrape_configs:
       - targets: ['api:2112']
         labels:
           service: 'go-api-application'
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: ['localhost:9090']
+    metrics_path: '/metrics'
