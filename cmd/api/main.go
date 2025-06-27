@@ -12,14 +12,12 @@ import (
 	_ "github.com/limbo/url_shortener/docs"
 	"github.com/limbo/url_shortener/internal/api"
 	"github.com/limbo/url_shortener/internal/logger"
-	"github.com/limbo/url_shortener/internal/metrics"
 	"github.com/limbo/url_shortener/internal/settings"
 	cache "github.com/limbo/url_shortener/internal/url_cache_manager"
 	urlmanager "github.com/limbo/url_shortener/internal/url_manager"
 )
 
 func main() {
-	metrics.RegisterMetrics()
 	cfg := settings.GetConfig()
 
 	lm := urlmanager.New(urlmanager.DBCfg{

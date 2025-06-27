@@ -4,9 +4,11 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
+	"github.com/limbo/url_shortener/internal/metrics"
 	"github.com/limbo/url_shortener/internal/settings"
 )
 
@@ -25,6 +27,16 @@ func (s *Server) RequestIDMiddleware(next http.Handler) http.Handler {
 		r = r.WithContext(ctx)
 		w.Header().Set("X-Request-ID", requestID.String())
 		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *Server) HTTPMetricsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, r)
+		duration := time.Since(start).Seconds()
+		metrics.HTTPDuration.WithLabelValues(r.URL.Path).Observe(duration)
+		metrics.HTTPRequests.WithLabelValues(r.Method, r.URL.Path).Inc()
 	})
 }
 
