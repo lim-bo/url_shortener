@@ -81,11 +81,34 @@ services:
       - prometheus
     networks:
       - urlshort_metrics
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: urlshort_clickhouse_container
+    ports:
+      - 8123:8123
+      - 9000:9000
+      - 9009:9009
+    volumes:
+      - urlshort_clickhouse_data:/var/lib/clickhouse
+      - ../config/clickhouse/clickhouse-config.xml:/etc/clickhouse-server/config.d/custom-config.xml
+      - ../migrations/clickhouse:/docker-entrypoint-initdb.d
+    environment:
+      CLICKHOUSE_DB: ${CH_DB}
+      CLICKHOUSE_USER: ${CH_USER}
+      CLICKHOUSE_PASS: ${CH_PASS}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    
 volumes:
   urlshort_pgdata:
   urlshort_redis_data:
   urlshort_grafana_storage:
-
+  urlshort_clickhouse_data:
 networks:
   urlshort_net:
   urlshort_metrics:
