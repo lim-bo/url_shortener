@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/limbo/url_shortener/models"
 )
 
 type ClicksDBCli struct {
@@ -19,12 +20,6 @@ type ClicksDBCfg struct {
 	Username string
 	Password string
 	Database string
-}
-
-type ClicksStat struct {
-	Code   string
-	OGLink string
-	Clicks uint64
 }
 
 func New(cfg ClicksDBCfg) *ClicksDBCli {
@@ -64,12 +59,12 @@ VALUES (?, ?, 1);`, link, code)
 	return nil
 }
 
-func (cli *ClicksDBCli) GetStats(link, code string) (*ClicksStat, error) {
-	var stat ClicksStat
+func (cli *ClicksDBCli) GetStats(link, code string) (*models.ClicksStat, error) {
+	var stat models.ClicksStat
 	row := cli.conn.QueryRow(`SELECT link, code, sum(clicks) FROM `+cli.dbName+`.redirect_stat WHERE code = ? GROUP BY link, code;`, code)
 	if err := row.Scan(&stat.OGLink, &stat.Code, &stat.Clicks); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return &ClicksStat{
+			return &models.ClicksStat{
 				OGLink: link,
 				Code:   code,
 				Clicks: 0,

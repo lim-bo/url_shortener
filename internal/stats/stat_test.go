@@ -11,6 +11,7 @@ import (
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/limbo/url_shortener/internal/stats"
+	"github.com/limbo/url_shortener/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -55,7 +56,7 @@ func TestGetStat(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"link", "code", "clicks"}).AddRow(link, code, clicks))
 		stat, err := cli.GetStats(link, code)
 		assert.NoError(t, err)
-		assert.Equal(t, &stats.ClicksStat{
+		assert.Equal(t, &models.ClicksStat{
 			Code:   code,
 			OGLink: link,
 			Clicks: uint64(clicks),
@@ -78,7 +79,7 @@ func TestIntegrational(t *testing.T) {
 	assert.NoError(t, err)
 	stat, err := cli.GetStats(link, code)
 	assert.NoError(t, err)
-	assert.Equal(t, stats.ClicksStat{
+	assert.Equal(t, models.ClicksStat{
 		OGLink: link,
 		Code:   code,
 		Clicks: 1,
