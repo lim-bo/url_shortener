@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/limbo/url_shortener/internal/api"
 	"github.com/limbo/url_shortener/models"
 )
 
@@ -59,16 +60,12 @@ VALUES (?, ?, 1);`, link, code)
 	return nil
 }
 
-func (cli *ClicksDBCli) GetStats(link, code string) (*models.ClicksStat, error) {
+func (cli *ClicksDBCli) GetStats(code string) (*models.ClicksStat, error) {
 	var stat models.ClicksStat
 	row := cli.conn.QueryRow(`SELECT link, code, sum(clicks) FROM `+cli.dbName+`.redirect_stat WHERE code = ? GROUP BY link, code;`, code)
 	if err := row.Scan(&stat.OGLink, &stat.Code, &stat.Clicks); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return &models.ClicksStat{
-				OGLink: link,
-				Code:   code,
-				Clicks: 0,
-			}, nil
+			return nil, api.ErrNoRedirects
 		}
 		return nil, errors.New("error getting stat values: " + err.Error())
 	}

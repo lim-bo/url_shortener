@@ -54,7 +54,7 @@ func TestGetStat(t *testing.T) {
 		mock.ExpectQuery(expectedSQL).
 			WithArgs(code).
 			WillReturnRows(sqlmock.NewRows([]string{"link", "code", "clicks"}).AddRow(link, code, clicks))
-		stat, err := cli.GetStats(link, code)
+		stat, err := cli.GetStats(code)
 		assert.NoError(t, err)
 		assert.Equal(t, &models.ClicksStat{
 			Code:   code,
@@ -67,7 +67,7 @@ func TestGetStat(t *testing.T) {
 		mock.ExpectQuery(`SELECT link, code, clicks`).
 			WithArgs(code).
 			WillReturnError(errors.New("test error"))
-		_, err := cli.GetStats(link, code)
+		_, err := cli.GetStats(code)
 		assert.Error(t, err)
 	})
 }
@@ -77,7 +77,7 @@ func TestIntegrational(t *testing.T) {
 	cli := stats.NewWithConn(conn, "default")
 	err := cli.IncreaseClicks(link, code)
 	assert.NoError(t, err)
-	stat, err := cli.GetStats(link, code)
+	stat, err := cli.GetStats(code)
 	assert.NoError(t, err)
 	assert.Equal(t, models.ClicksStat{
 		OGLink: link,
