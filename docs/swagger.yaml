@@ -10,6 +10,15 @@ definitions:
       link:
         type: string
     type: object
+  models.ClicksStat:
+    properties:
+      clicks:
+        type: integer
+      code:
+        type: string
+      link:
+        type: string
+    type: object
 info:
   contact: {}
   description: API for url-shortener app
@@ -59,6 +68,25 @@ paths:
         "500":
           description: Error while fetching databases
       summary: Recieves link to be shorted and provides short one
+  /stats/{short_code}:
+    get:
+      description: Takes short code in path value, searchs in analytics DB
+      parameters:
+      - description: short code of original link
+        example: '"12345678"'
+        in: path
+        name: short_code
+        required: true
+        type: string
+      responses:
+        "200":
+          description: 'Info with original link, code and clicks count" example({"code":
+            abcd1234, "link":"google.com", "clicks": 100500})'
+          schema:
+            $ref: '#/definitions/models.ClicksStat'
+        "500":
+          description: Internal error while fetching DBs
+      summary: Provides statistic about link redirects
 schemes:
 - http
 swagger: "2.0"

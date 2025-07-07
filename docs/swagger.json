@@ -47,6 +47,33 @@
                 }
             }
         },
+        "/stats/{short_code}": {
+            "get": {
+                "description": "Takes short code in path value, searchs in analytics DB",
+                "summary": "Provides statistic about link redirects",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "\"12345678\"",
+                        "description": "short code of original link",
+                        "name": "short_code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Info with original link, code and clicks count\" example({\"code\": abcd1234, \"link\":\"google.com\", \"clicks\": 100500})",
+                        "schema": {
+                            "$ref": "#/definitions/models.ClicksStat"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error while fetching DBs"
+                    }
+                }
+            }
+        },
         "/{short_code}": {
             "get": {
                 "description": "Takes shortcode in path value, searchs original url\nlinked with it and then redirects with 308 code.",
@@ -84,6 +111,20 @@
         "api.ShortenResponse": {
             "type": "object",
             "properties": {
+                "link": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ClicksStat": {
+            "type": "object",
+            "properties": {
+                "clicks": {
+                    "type": "integer"
+                },
+                "code": {
+                    "type": "string"
+                },
                 "link": {
                     "type": "string"
                 }
