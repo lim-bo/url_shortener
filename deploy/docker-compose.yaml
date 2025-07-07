@@ -96,12 +96,14 @@ services:
     environment:
       CLICKHOUSE_DB: ${CH_DB}
       CLICKHOUSE_USER: ${CH_USER}
-      CLICKHOUSE_PASS: ${CH_PASS}
+      CLICKHOUSE_PASSWORD: ${CH_PASS}
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "localhost:8123/ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - urlshort_net
     
     
 volumes:
