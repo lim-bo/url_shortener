@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/limbo/url_shortener/internal/settings"
+	"github.com/limbo/url_shortener/models"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -19,17 +20,30 @@ type CacheManager interface {
 	GetLink(shortCode string) (string, error)
 }
 
-type Server struct {
-	mx    *chi.Mux
-	links LinksManager
-	cache CacheManager
+type StatsManager interface {
+	IncreaseClicks(link, code string) error
+	GetStats(code string) (*models.ClicksStat, error)
 }
 
-func New(lm LinksManager, cm CacheManager) *Server {
+type Server struct {
+	mx        *chi.Mux
+	links     LinksManager
+	cache     CacheManager
+	statistic StatsManager
+}
+
+type ServerCfg struct {
+	Lm LinksManager
+	Cm CacheManager
+	Sm StatsManager
+}
+
+func New(cfg ServerCfg) *Server {
 	return &Server{
-		mx:    chi.NewMux(),
-		links: lm,
-		cache: cm,
+		mx:        chi.NewMux(),
+		links:     cfg.Lm,
+		cache:     cfg.Cm,
+		statistic: cfg.Sm,
 	}
 }
 

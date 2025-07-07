@@ -13,6 +13,7 @@ import (
 	"github.com/limbo/url_shortener/internal/api"
 	"github.com/limbo/url_shortener/internal/logger"
 	"github.com/limbo/url_shortener/internal/settings"
+	"github.com/limbo/url_shortener/internal/stats"
 	cache "github.com/limbo/url_shortener/internal/url_cache_manager"
 	urlmanager "github.com/limbo/url_shortener/internal/url_manager"
 )
@@ -32,11 +33,22 @@ func main() {
 		Password: cfg.GetString("redis_pass"),
 	})
 
+	sm := stats.New(stats.ClicksDBCfg{
+		Address:  cfg.GetString("ch_address"),
+		Database: cfg.GetString("ch_db"),
+		Username: cfg.GetString("ch_user"),
+		Password: cfg.GetString("ch_pass"),
+	})
+
 	lgger := slog.New(
 		logger.NewContextHandler(slog.NewTextHandler(os.Stdout, nil)),
 	)
 	slog.SetDefault(lgger)
 
-	serv := api.New(lm, cm)
+	serv := api.New(api.ServerCfg{
+		Lm: lm,
+		Cm: cm,
+		Sm: sm,
+	})
 	log.Fatal(serv.Run())
 }

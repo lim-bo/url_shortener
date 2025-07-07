@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/limbo/url_shortener/internal/metrics"
 	"github.com/limbo/url_shortener/internal/settings"
+	"github.com/limbo/url_shortener/models"
 )
 
 func (s *Server) CORSMiddleware(next http.Handler) http.Handler {
@@ -123,9 +125,66 @@ func (s *Server) redirect(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	http.Redirect(w, r, originalLink, http.StatusPermanentRedirect)
+	go func() {
+		err := s.statistic.IncreaseClicks(originalLink, code)
+		if err != nil {
+			slog.ErrorContext(ctx, "error updating clicks stat", slog.String("error", err.Error()))
+		} else {
+			slog.InfoContext(ctx, "clicks stat updated")
+		}
+	}()
 	slog.InfoContext(ctx, "successfull redirect")
 }
 
+// @Router /stats/{short_code} [get]
+// @Summary Provides statistic about link redirects
+// @Description Takes short code in path value, searchs in analytics DB
+// @Desctiption for its clicks statistics.
+// @Param short_code path string true "short code of original link" example("12345678")
+// @Success 200 {object} models.ClicksStat "Info with original link, code and clicks count" example({"code": abcd1234, "link":"google.com", "clicks": 100500})
+// @Failure 500 "Internal error while fetching DBs"
 func (s *Server) clickStats(w http.ResponseWriter, r *http.Request) {
-
+	ctx := r.Context()
+	code := r.PathValue("short_code")
+	originalLink, err := s.cache.GetLink(code)
+	if err != nil && err != ErrNoKey {
+		slog.ErrorContext(ctx, "error getting link cache", slog.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} else if err == ErrNoKey {
+		originalLink, err = s.links.GetLinkByCode(code)
+		if err != nil {
+			slog.ErrorContext(ctx, "getting original link error", slog.String("error", err.Error()))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+	stat, err := s.statistic.GetStats(code)
+	if err != nil {
+		if errors.Is(err, ErrNoRedirects) {
+			err = sonic.ConfigFastest.NewEncoder(w).Encode(models.ClicksStat{
+				OGLink: originalLink,
+				Code:   code,
+				Clicks: 0,
+			})
+			if err != nil {
+				slog.ErrorContext(ctx, "error marshalling stat results", slog.String("error", err.Error()))
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			slog.InfoContext(ctx, "successfully provided clicks statistic")
+			return
+		} else {
+			slog.ErrorContext(ctx, "error getting stat", slog.String("error", err.Error()))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+	err = sonic.ConfigFastest.NewEncoder(w).Encode(stat)
+	if err != nil {
+		slog.ErrorContext(ctx, "error marshalling stat results", slog.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	slog.InfoContext(ctx, "successfully provided clicks statistic")
 }

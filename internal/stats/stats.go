@@ -33,7 +33,15 @@ func New(cfg ClicksDBCfg) *ClicksDBCli {
 		},
 		DialTimeout: time.Second * 5,
 	})
-	if err := conn.Ping(); err != nil {
+	var err error
+	for i := 0; i < 5; i++ {
+		err = conn.Ping()
+		if err == nil {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+	if err != nil {
 		log.Fatal(err)
 	}
 	conn.SetMaxOpenConns(15)
