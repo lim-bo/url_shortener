@@ -1,3 +1,4 @@
 cfg.yaml
 .env
 docs/docs.go
+certs

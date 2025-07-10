@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 URL Shortener</h1>
+        
+        <!-- Секция для сокращения ссылки -->
+        <div class="section">
+            <h2>Сократить ссылку</h2>
+            <div class="input-group">
+                <input type="url" id="originalUrl" placeholder="https://example.com" required>
+                <button id="shortenBtn">Сократить</button>
+            </div>
+            <div id="shortenResult" class="result"></div>
+        </div>
+        
+        <!-- Секция для просмотра статистики -->
+        <div class="section">
+            <h2>Статистика переходов</h2>
+            <div class="input-group">
+                <input type="text" id="shortCode" placeholder="Введите короткий код (например: 12345678)">
+                <button id="statsBtn">Показать статистику</button>
+            </div>
+            <div id="statsResult" class="result"></div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/scripts.js"></script>
+</body>
+</html>
