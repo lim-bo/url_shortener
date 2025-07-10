@@ -56,7 +56,7 @@ func (s *Server) moundEndpoints() {
 			r.Get("/{short_code}", s.clickStats)
 		})
 	})
-	s.mx.Get("/{short_code}", s.redirect)
+	s.mx.Get("/r/{short_code}", s.redirect)
 
 	s.mx.Get("/swagger/*", httpSwagger.Handler(
 		httpSwagger.URL("/swagger/doc.json"),
