@@ -45,6 +45,8 @@ services:
     depends_on:
       - postgres
       - redis
+      - prometheus
+      - clickhouse
     ports:
       - 8091:8080
       - 2112:2112
@@ -104,7 +106,18 @@ services:
       retries: 5
     networks:
       - urlshort_net
-    
+  nginx:
+    image: nginx:latest
+    container_name: urlshort_nginx_container
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ../config/nginx.conf:/etc/nginx/nginx.conf
+      - ../app:/usr/share/nginx/html
+    restart: unless-stopped
+    networks:
+      - urlshort_net
     
 volumes:
   urlshort_pgdata:
