@@ -130,7 +130,6 @@ func (s *Server) redirect(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	http.Redirect(w, r, originalLink, http.StatusPermanentRedirect)
 	go func() {
 		err := s.statistic.IncreaseClicks(originalLink, code)
 		if err != nil {
@@ -140,6 +139,7 @@ func (s *Server) redirect(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 	slog.InfoContext(ctx, "successfull redirect")
+	http.Redirect(w, r, originalLink, http.StatusPermanentRedirect)
 }
 
 // @Router /stats/{short_code} [get]

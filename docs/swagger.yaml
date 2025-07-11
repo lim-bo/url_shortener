@@ -24,7 +24,7 @@ info:
   description: API for url-shortener app
   title: URL-shortener API
 paths:
-  /{short_code}:
+  /r/{short_code}:
     get:
       description: |-
         Takes shortcode in path value, searchs original url
