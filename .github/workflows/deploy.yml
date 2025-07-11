@@ -1,0 +1,34 @@
+name: CD
+
+on:
+    workflow_run:
+      workflows: ["Ci"]
+      types: 
+        - completed
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            - name: Load configs
+              run: |
+                cd ~/work/url_shortener/url_shortener
+                echo "${{secrets.APP_CONFIG}}" >> ./config/cfg.yaml
+                echo "${{secrets.SERVICES_ENV}}" >> ./deploy/.env
+            - name: Deploy via SSH
+              uses: appleboy/ssh-action@v1
+              with:
+                host: ${{secrets.SSH_HOST}}
+                username: ${{secrets.SSH_USERNAME}}
+                key: ${{secrets.SSH_KEY}}
+                script: |
+                    cd ~/work/url_shortener/url_shortener/deploy
+                    docker compose down || true
+                    git fetch --all
+                    git reset --hard origin/main
+                    docker compose pull
+                    docker compose up -d --build
+                    docker image prune -f
