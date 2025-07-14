@@ -1,6 +1,6 @@
 const AppConfig = {
-    API_BASE_URL: 'http://localhost:8091/api/v1',
-    API_PROVIDED_LINK_PROTOCOL: "http://",
+    API_BASE_URL: 'https://url-short-af.space/api/v1',
+    API_PROVIDED_LINK_PROTOCOL: "https://",
     API_ENDPOINTS: {
         SHORTEN: '/shorten',
         STATS: '/stats'

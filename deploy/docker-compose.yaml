@@ -117,6 +117,8 @@ services:
       - ../app:/usr/share/nginx/html
       - /etc/letsencrypt:/etc/letsencrypt:ro
     restart: unless-stopped
+    depends_on:
+      - api
     networks:
       - urlshort_net
     
