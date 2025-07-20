@@ -24,6 +24,7 @@ var (
 )
 
 func TestUpdateStat(t *testing.T) {
+	t.Parallel()
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatal(err)
@@ -44,6 +45,7 @@ VALUES (?, ?, 1);`)
 }
 
 func TestGetStat(t *testing.T) {
+	t.Parallel()
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatal(err)
@@ -73,6 +75,7 @@ func TestGetStat(t *testing.T) {
 }
 
 func TestIntegrational(t *testing.T) {
+	t.Parallel()
 	conn := setupContainer(t)
 	cli := stats.NewWithConn(conn, "default")
 	err := cli.IncreaseClicks(link, code)

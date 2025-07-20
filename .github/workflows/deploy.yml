@@ -17,14 +17,25 @@ jobs:
               run: |
                 echo "${{secrets.APP_CONFIG}}" >> ./config/cfg.yaml
                 echo "${{secrets.SERVICES_ENV}}" >> ./deploy/.env
+            - name: Ensure remote path exists
+              uses: appleboy/ssh-action@v1
+              with:
+                host: ${{ secrets.SSH_HOST }}
+                username: ${{ secrets.SSH_USERNAME }}
+                key: ${{ secrets.SSH_KEY }}
+                script: |
+                  mkdir -p /home/${{ secrets.SSH_USERNAME }}/apps/url_shortener
+                  chmod -R u+w /home/${{ secrets.SSH_USERNAME }}/apps/url_shortener
+                  ls -ld /home/${{ secrets.SSH_USERNAME }}/apps/url_shortener
             - name: Upload configs
               uses: appleboy/scp-action@v1
-              with: 
-                host: ${{secrets.SSH_HOST}}
-                username: ${{secrets.SSH_USERNAME}}
-                key: ${{secrets.SSH_KEY}}
-                source: "./deploy/*, ./config/*"
-                target: "~/apps/url_shortener/"
+              with:
+                host: ${{ secrets.SSH_HOST }}
+                username: ${{ secrets.SSH_USERNAME }}
+                key: ${{ secrets.SSH_KEY }}
+                source: "./config ./deploy"
+                target: "/home/${{secrets.SSH_USERNAME}}/apps/url_shortener/"
+                debug: true
             - name: Deploy via SSH
               uses: appleboy/ssh-action@v1
               with:

@@ -78,6 +78,7 @@ func (gen *CodeGenMock) Gen() string {
 	return testCode
 }
 func TestSaveURL(t *testing.T) {
+	t.Parallel()
 	mockPool, err := pgxmock.NewPool()
 	if err != nil {
 		t.Fatal(err)
@@ -119,6 +120,7 @@ func TestSaveURL(t *testing.T) {
 }
 
 func TestGetLink(t *testing.T) {
+	t.Parallel()
 	mockPool, err := pgxmock.NewPool()
 	if err != nil {
 		t.Fatal(err)
@@ -147,6 +149,7 @@ func TestGetLink(t *testing.T) {
 }
 
 func TestIntegrational(t *testing.T) {
+	t.Parallel()
 	cfg := setupTestDB(t)
 	cli := urlmanager.New(cfg, &urlmanager.CodeGenerator{})
 
