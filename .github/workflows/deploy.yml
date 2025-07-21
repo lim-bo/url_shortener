@@ -15,26 +15,19 @@ jobs:
               uses: actions/checkout@v4
             - name: Load configs
               run: |
-                echo "${{secrets.APP_CONFIG}}" >> ./config/cfg.yaml
-                echo "${{secrets.SERVICES_ENV}}" >> ./deploy/.env
-            - name: Ensure remote path exists
-              uses: appleboy/ssh-action@v1
-              with:
-                host: ${{ secrets.SSH_HOST }}
-                username: ${{ secrets.SSH_USERNAME }}
-                key: ${{ secrets.SSH_KEY }}
-                script: |
-                  mkdir -p /home/${{ secrets.SSH_USERNAME }}/apps/url_shortener
-                  chmod -R u+w /home/${{ secrets.SSH_USERNAME }}/apps/url_shortener
-                  ls -ld /home/${{ secrets.SSH_USERNAME }}/apps/url_shortener
+                mkdir -p config deploy
+                echo "${{secrets.APP_CONFIG}}" > ./config/cfg.yaml
+                echo "${{secrets.SERVICES_ENV}}" > ./deploy/.env
             - name: Upload configs
               uses: appleboy/scp-action@v1
               with:
                 host: ${{ secrets.SSH_HOST }}
                 username: ${{ secrets.SSH_USERNAME }}
                 key: ${{ secrets.SSH_KEY }}
-                source: "./config ./deploy"
+                source: "config/cfg.yaml,deploy/.env"
                 target: "/home/${{secrets.SSH_USERNAME}}/apps/url_shortener/"
+                strip_components: 0
+                tar_exec: tar
                 debug: true
             - name: Deploy via SSH
               uses: appleboy/ssh-action@v1
