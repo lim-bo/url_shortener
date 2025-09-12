@@ -3,7 +3,7 @@
 A simple and fast web application for shortening long URLs.  
 Built with **Go** and containerized using **Docker Compose**.
 
-### 🔗 [Link to app page](https://url-short-af.space)
+### 🔗 [Link to app page](https://url-short-af.space) (currently unavailable)
 
 ## Tech Stack
 
